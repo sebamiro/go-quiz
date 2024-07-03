@@ -13,6 +13,6 @@ type Container struct {
 func NewContainer() *Container {
 	var c Container
 	c.Web = echo.New()
-	c.Database = database.Database{}
+	c.Database = database.NewDatabase()
 	return &c
 }
