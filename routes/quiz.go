@@ -56,7 +56,7 @@ func (q quiz) Post(ctx echo.Context) error {
 		return errors.New("Invalid answer len")
 	}
 
-	correctAnswers := 0
+	var correctAnswers uint = 0
 	for i, q := range quizQuestions {
 		if q.CorrectAnswer == quizSubmit.aswers[i] {
 			correctAnswers++
@@ -65,11 +65,10 @@ func (q quiz) Post(ctx echo.Context) error {
 	err = q.db.AddQuizResponse(uint(quizId), database.QuizResponse{
 		QuizID:   uint(quizId),
 		Username: quizSubmit.name,
-		Points:   uint(correctAnswers),
+		Points:   correctAnswers,
 	})
 	if err != nil {
 		return err
 	}
-
-	return nil
+	return ctx.JSON(http.StatusOK, correctAnswers)
 }

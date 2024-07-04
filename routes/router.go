@@ -5,9 +5,10 @@ import (
 )
 
 func BuildRoutes(c *services.Container) {
-	quiz := c.Web.Group("quiz/")
+	quizGroup := c.Web.Group("quiz/")
 
-	quiz.GET("/", nil)
-	quiz.GET("/:quizid", nil)
-	quiz.POST("/:quizid", nil)
+	quiz := quiz{db: &c.Database}
+	quizGroup.GET("", quiz.Get)
+	quizGroup.GET(":quizid", quiz.GetOne)
+	quizGroup.POST(":quizid", quiz.Post)
 }
