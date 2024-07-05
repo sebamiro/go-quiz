@@ -1,6 +1,10 @@
 package database
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"sort"
+)
 
 var userId uint = 0
 
@@ -61,8 +65,18 @@ func (d *Database) AddQuizResponse(id uint, qr QuizResponse) error {
 	if !ok {
 		return errors.New("Responses not found for such quiz")
 	}
-	q = append(q, qr)
+	d.QuizResponses[id] = append(q, qr)
 	return nil
+}
+
+func (d *Database) GetQuizResponsesOrderdByPoints(id uint) ([]QuizResponse, error) {
+	q, ok := d.QuizResponses[id]
+	fmt.Println(q)
+	if !ok {
+		return nil, errors.New("Responses not found for such quiz")
+	}
+	sort.Sort(sort.Reverse(ResponsesList(q)))
+	return q, nil
 }
 
 var (
@@ -191,9 +205,15 @@ var (
 				"El Raval",
 				"Gràcia",
 				"El Born",
-				"gofmt",
+				"Barri Gothic",
 			},
 			CorrectAnswer: 3,
 		},
 	}
 )
+
+type ResponsesList []QuizResponse
+
+func (p ResponsesList) Len() int           { return len(p) }
+func (p ResponsesList) Less(i, j int) bool { return p[i].Points < p[j].Points }
+func (p ResponsesList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
