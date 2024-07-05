@@ -10,5 +10,6 @@ func BuildRoutes(c *services.Container) {
 	quiz := quiz{db: &c.Database}
 	quizGroup.GET("", quiz.Get)
 	quizGroup.GET(":quizid", quiz.GetOne)
+	quizGroup.GET(":quizid/leaderboard", quiz.GetLeaderboard)
 	quizGroup.POST(":quizid", quiz.Post)
 }
