@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 )
 
@@ -71,7 +70,6 @@ func (d *Database) AddQuizResponse(id uint, qr QuizResponse) error {
 
 func (d *Database) GetQuizResponsesOrderdByPoints(id uint) ([]QuizResponse, error) {
 	q, ok := d.QuizResponses[id]
-	fmt.Println(q)
 	if !ok {
 		return nil, errors.New("Responses not found for such quiz")
 	}
