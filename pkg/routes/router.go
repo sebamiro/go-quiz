@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/sebamiro/go-quiz/services"
+	"github.com/sebamiro/go-quiz/pkg/services"
 )
 
 func BuildRoutes(c *services.Container) {

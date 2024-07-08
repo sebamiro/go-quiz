@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/sebamiro/go-quiz/database"
-	"github.com/sebamiro/go-quiz/dto"
+	"github.com/sebamiro/go-quiz/pkg/dto"
 )
 
 type quiz struct {
@@ -25,25 +24,29 @@ func (q quiz) Get(ctx echo.Context) error {
 func (q quiz) GetLeaderboard(ctx echo.Context) error {
 	quizId, err := strconv.Atoi(ctx.Param("quizid"))
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusBadRequest, dto.ResopnseLeaderboard{Error: err.Error()})
 	}
-	leaderboard, err := q.db.GetQuizResponsesOrderdByPoints(uint(quizId))
+	quiz, err := q.db.GetQuizesById(uint(quizId))
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusNotFound, dto.ResopnseLeaderboard{Error: err.Error()})
 	}
-	return ctx.JSON(http.StatusOK, leaderboard)
+	leaderboard, _ := q.db.GetQuizResponsesOrderdByPoints(uint(quizId))
+	return ctx.JSON(http.StatusOK, dto.ResopnseLeaderboard{
+		Title:       quiz.Title,
+		Leaderboard: leaderboard,
+	})
 }
 
 func (q quiz) GetOne(ctx echo.Context) error {
 	quizId, err := strconv.Atoi(ctx.Param("quizid"))
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusBadRequest, dto.ResopnseQuestions{Error: err.Error()})
 	}
 	quizQuestions, err := q.db.GetQuizQuestions(uint(quizId))
 	if err != nil {
-		return err
+		return ctx.JSON(http.StatusNotFound, dto.ResopnseQuestions{Error: err.Error()})
 	}
-	return ctx.JSON(http.StatusOK, quizQuestions)
+	return ctx.JSON(http.StatusOK, dto.ResopnseQuestions{Questions: quizQuestions})
 }
 
 var userCount uint = 0
@@ -54,25 +57,24 @@ func (q quiz) Post(ctx echo.Context) error {
 	quizId, err := strconv.Atoi(ctx.Param("quizid"))
 	if err != nil {
 		log.Println("[ERROR] Atoi:", err)
-		return err
+		return ctx.JSON(http.StatusBadRequest, dto.ResponseEnd{Error: err.Error()})
 	}
-	quizQuestions, err := q.db.GetQuizQuestions(uint(quizId))
+	quiz, err := q.db.GetQuizesById(uint(quizId))
 	if err != nil {
-		log.Println("[ERROR] DB:", err)
-		return err
+		return ctx.JSON(http.StatusNotFound, dto.ResponseEnd{Error: err.Error()})
 	}
+	quizQuestions, _ := q.db.GetQuizQuestions(uint(quizId))
+
 	if err := json.NewDecoder(ctx.Request().Body).Decode(&QuizSubmit); err != nil {
-		log.Println("[ERROR] json:", err)
-		return err
+		return ctx.JSON(http.StatusBadRequest, dto.ResponseEnd{Error: err.Error()})
 	}
-	if len(quizQuestions) != len(QuizSubmit.Aswers) {
-		log.Println("[ERROR] len:", err)
-		return errors.New("Invalid answer len")
+	if len(quizQuestions) != len(QuizSubmit.Answers) {
+		return ctx.JSON(http.StatusBadRequest, dto.ResponseEnd{Error: "Invalid answer len"})
 	}
 
 	var correctAnswers uint = 0
 	for i, q := range quizQuestions {
-		if q.CorrectAnswer == QuizSubmit.Aswers[i] {
+		if q.CorrectAnswer == QuizSubmit.Answers[i] {
 			correctAnswers++
 		}
 	}
@@ -81,15 +83,12 @@ func (q quiz) Post(ctx echo.Context) error {
 		QuizSubmit.Name = "user"
 	}
 	username := fmt.Sprintf("%s#%.4d", QuizSubmit.Name, userCount)
-	err = q.db.AddQuizResponse(uint(quizId), database.QuizResponse{
+	_ = q.db.AddQuizResponse(uint(quizId), database.QuizResponse{
 		QuizID:   uint(quizId),
 		Username: username,
 		Points:   correctAnswers,
 	})
 	userCount++
-	if err != nil {
-		return err
-	}
 
 	leaderboard, _ := q.db.GetQuizResponsesOrderdByPoints(uint(quizId))
 	position := 0
@@ -100,10 +99,11 @@ func (q quiz) Post(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, dto.QuizEnd{
+	return ctx.JSON(http.StatusOK, dto.ResponseEnd{
 		Name:         username,
 		Points:       correctAnswers,
+		Title:        quiz.Title,
 		TotalQuizers: uint(len(leaderboard)),
-		Position:     uint(position),
+		Position:     uint(position + 1),
 	})
 }
