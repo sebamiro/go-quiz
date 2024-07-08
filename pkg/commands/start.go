@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const API_URL = "http://127.0.0.1:3000/"
-
 func start(cmd *cobra.Command, args []string) {
 	questions, err := getQuizQuestions(args[0])
 	if err != nil {
