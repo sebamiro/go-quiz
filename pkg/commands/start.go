@@ -76,7 +76,7 @@ func getQuizQuestions(id string) ([]database.QuizQuestion, error) {
 func getAnswer(q database.QuizQuestion, e bool) uint {
 	var a uint
 	if e {
-		fmt.Println("Please introduce a valid answer number")
+		fmt.Println("\nPlease introduce a valid number as answer")
 	}
 	fmt.Print(q)
 	fmt.Print("Select the number of your answer: ")
