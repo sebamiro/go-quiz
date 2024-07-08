@@ -15,7 +15,7 @@ Once you cloned the reposiory:
 
 ``` make ```
 
-Then you need to run the api server, it runs on the port 3000:
+Then you need to run the api server, it runs on 127.0.0.1:3000:
 
 ``` ./build/quiz-api ```
 
